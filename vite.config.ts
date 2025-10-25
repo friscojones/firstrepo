@@ -1,7 +1,7 @@
 import { defineConfig } from 'vite'
 
 export default defineConfig({
-  base: '/guess-the-sentence-game/',
+  base: '/firstrepo/',
   build: {
     outDir: 'dist',
     sourcemap: true
