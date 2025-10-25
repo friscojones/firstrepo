@@ -4,6 +4,7 @@
  */
 
 import {
+  Env,
   SentenceResponse,
   ScoreSubmissionRequest,
   ScoreSubmissionResponse,
@@ -12,12 +13,7 @@ import {
   ErrorResponse,
 } from './types';
 
-export interface Env {
-  SENTENCES_KV: KVNamespace;
-  GAME_DB: D1Database;
-  GAME_ANALYTICS: AnalyticsEngineDataset;
-  ALLOWED_ORIGINS: string;
-}
+
 
 // CORS headers for GitHub Pages domain access
 function getCorsHeaders(env: Env, origin?: string): Record<string, string> {
@@ -65,7 +61,7 @@ function handleOptions(env: Env, origin?: string) {
 }
 
 export default {
-  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const { pathname } = url;
     const origin = request.headers.get('Origin');

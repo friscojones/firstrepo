@@ -32,6 +32,7 @@ export class UIController {
   private messageElement: HTMLElement | null = null;
   private completionModal: HTMLElement | null = null;
   private leaderboardModal: HTMLElement | null = null;
+  private modalFocusHandlers = new WeakMap<HTMLElement, (e: KeyboardEvent) => void>();
 
   constructor(gameEngine: GameEngine, config?: Partial<UIConfig>) {
     this.gameEngine = gameEngine;
@@ -194,10 +195,12 @@ export class UIController {
    * Handle window resize events
    * Requirements: 1.4
    */
+  private resizeTimeout: number | undefined;
+
   private handleResize(): void {
     // Debounce resize events
-    clearTimeout((this as any).resizeTimeout);
-    (this as any).resizeTimeout = setTimeout(() => {
+    clearTimeout(this.resizeTimeout);
+    this.resizeTimeout = setTimeout(() => {
       this.adjustModalPositioning();
     }, 150);
   }
@@ -569,13 +572,14 @@ export class UIController {
    * Display a temporary message to the user
    * Requirements: 2.5
    */
+  private messageTimeout: number | undefined;
+
   showMessage(text: string, type: 'success' | 'error' | 'info' = 'info'): void {
     if (!this.messageElement) return;
 
     // Clear any existing message timeout
-    const existingTimeout = (this.messageElement as any).messageTimeout;
-    if (existingTimeout) {
-      clearTimeout(existingTimeout);
+    if (this.messageTimeout) {
+      clearTimeout(this.messageTimeout);
     }
 
     // Set message content and styling
@@ -583,7 +587,7 @@ export class UIController {
     this.messageElement.className = `message-area message-${type}`;
     
     // Auto-clear message after delay
-    (this.messageElement as any).messageTimeout = setTimeout(() => {
+    this.messageTimeout = setTimeout(() => {
       if (this.messageElement) {
         this.messageElement.textContent = 'Click letters to guess the sentence!';
         this.messageElement.className = 'message-area';
@@ -1163,10 +1167,13 @@ export class UIController {
     };
     
     // Remove any existing listeners
-    modal.removeEventListener('keydown', (modal as any).trapFocusHandler);
+    const existingHandler = this.modalFocusHandlers.get(modal);
+    if (existingHandler) {
+      modal.removeEventListener('keydown', existingHandler);
+    }
     
     // Add new listener
-    (modal as any).trapFocusHandler = handleTabKey;
+    this.modalFocusHandlers.set(modal, handleTabKey);
     modal.addEventListener('keydown', handleTabKey);
   }
 

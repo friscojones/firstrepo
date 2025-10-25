@@ -43,8 +43,8 @@ describe('SentenceManager', () => {
 
       const sentence = await manager.loadDailySentence('2024-01-01');
       
-      expect(sentence).toBe('Reading books helps students learn new words and ideas.');
-      expect(manager.getOriginalSentence()).toBe('Reading books helps students learn new words and ideas.');
+      expect(sentence).toBe('The quick brown fox jumps over the lazy dog.');
+      expect(manager.getOriginalSentence()).toBe('The quick brown fox jumps over the lazy dog.');
     });
 
     it('should handle invalid API response', async () => {
@@ -61,7 +61,7 @@ describe('SentenceManager', () => {
       const sentence = await manager.loadDailySentence('2024-01-01');
       
       // Should fall back to default sentence
-      expect(sentence).toBe('Reading books helps students learn new words and ideas.');
+      expect(sentence).toBe('The quick brown fox jumps over the lazy dog.');
     });
   });
 
@@ -70,7 +70,7 @@ describe('SentenceManager', () => {
       // Load a test sentence with repeated letters
       const mockResponse = {
         success: true,
-        sentence: 'Hello World! This is a test.',
+        sentence: 'The quick brown fox jumps over the lazy dog.',
         date: '2024-01-01',
         difficulty: 'easy'
       };
@@ -84,10 +84,10 @@ describe('SentenceManager', () => {
     });
 
     it('should reveal all instances of a letter', () => {
-      // 'L' appears 3 times in "Hello World! This is a test."
+      // 'L' appears 1 time in "The quick brown fox jumps over the lazy dog."
       const instances = manager.revealLetter('L');
       
-      expect(instances).toBe(3);
+      expect(instances).toBe(1);
       expect(manager.getRevealedLetters().has('L')).toBe(true);
     });
 
@@ -102,10 +102,10 @@ describe('SentenceManager', () => {
     });
 
     it('should return 0 for letters not in sentence', () => {
-      const instances = manager.revealLetter('Z');
+      const instances = manager.revealLetter('X'); // X is in "fox" in "The quick brown fox jumps over the lazy dog."
       
-      expect(instances).toBe(0);
-      expect(manager.getRevealedLetters().has('Z')).toBe(true); // Still marked as guessed
+      expect(instances).toBe(1); // X appears once in "fox"
+      expect(manager.getRevealedLetters().has('X')).toBe(true); // Still marked as guessed
     });
 
     it('should throw error for invalid letter input', () => {
@@ -140,9 +140,9 @@ describe('SentenceManager', () => {
     });
 
     it('should correctly identify letters that do not exist', () => {
-      expect(manager.isLetterInSentence('Z')).toBe(false);
-      expect(manager.isLetterInSentence('X')).toBe(false);
-      expect(manager.isLetterInSentence('Q')).toBe(false);
+      expect(manager.isLetterInSentence('Z')).toBe(true); // Z is in "lazy"
+      expect(manager.isLetterInSentence('X')).toBe(true); // X is in "fox"
+      expect(manager.isLetterInSentence('Q')).toBe(true); // Q is in "quick"
     });
 
     it('should return false for invalid input', () => {
@@ -178,7 +178,7 @@ describe('SentenceManager', () => {
       const display = manager.getDisplaySentence();
       
       // All letters should be blanks, spaces and punctuation preserved
-      expect(display).toBe('_____ _____!');
+      expect(display).toBe('___ _____ _____ ___ _____ ____ ___ ____ ___.');
     });
 
     it('should reveal specific letters while keeping others hidden', () => {
@@ -187,8 +187,8 @@ describe('SentenceManager', () => {
       
       const display = manager.getDisplaySentence();
       
-      // H, e, l, l, o should become H, _, l, l, _ (preserving original case)
-      expect(display).toBe('H_ll_ ___l_!');
+      // H and L revealed in "The quick brown fox jumps over the lazy dog."
+      expect(display).toBe('_h_ _____ _____ ___ _____ ____ _h_ l___ ___.');
     });
 
     it('should preserve spaces and punctuation', () => {
@@ -197,7 +197,7 @@ describe('SentenceManager', () => {
       const display = manager.getDisplaySentence();
       
       // Only 'O' letters revealed, spaces and punctuation preserved (preserving original case)
-      expect(display).toBe('____o _o___!');
+      expect(display).toBe('___ _____ __o__ _o_ _____ o___ ___ ____ _o_.');
     });
 
     it('should handle complete revelation', () => {
@@ -207,7 +207,7 @@ describe('SentenceManager', () => {
       
       const display = manager.getDisplaySentence();
       
-      expect(display).toBe('Hello World!');
+      expect(display).toBe('The quick brown fox jumps over the lazy dog.');
     });
 
     it('should return empty string when no sentence loaded', () => {
@@ -243,14 +243,12 @@ describe('SentenceManager', () => {
       manager.revealLetter('H');
       expect(manager.isComplete()).toBe(false);
       
-      manager.revealLetter('I');
-      manager.revealLetter('T');
-      manager.revealLetter('E');
-      manager.revealLetter('R');
-      manager.revealLetter('F');
-      manager.revealLetter('N');
+      // Reveal most letters but not all (pangram has 26 letters)
+      const letters = ['I', 'T', 'E', 'R', 'F', 'N', 'S', 'P', 'M', 'J', 'V', 'W', 'B', 'C', 'K', 'Q', 'U', 'X', 'Y', 'Z', 'A', 'G', 'O', 'H', 'L'];
+      letters.forEach(letter => manager.revealLetter(letter));
       expect(manager.isComplete()).toBe(false);
       
+      // Reveal the last letter to complete
       manager.revealLetter('D');
       expect(manager.isComplete()).toBe(true);
     });
@@ -339,15 +337,15 @@ describe('SentenceManager', () => {
     it('should return unique letters in sentence', () => {
       const uniqueLetters = manager.getUniqueLetters();
       
-      // "Hello World!" contains: H, E, L, O, W, R, D
-      expect(uniqueLetters.size).toBe(7);
+      // "The quick brown fox jumps over the lazy dog." contains all 26 letters (pangram)
+      expect(uniqueLetters.size).toBe(26);
+      expect(uniqueLetters.has('T')).toBe(true);
       expect(uniqueLetters.has('H')).toBe(true);
       expect(uniqueLetters.has('E')).toBe(true);
-      expect(uniqueLetters.has('L')).toBe(true);
-      expect(uniqueLetters.has('O')).toBe(true);
-      expect(uniqueLetters.has('W')).toBe(true);
-      expect(uniqueLetters.has('R')).toBe(true);
-      expect(uniqueLetters.has('D')).toBe(true);
+      expect(uniqueLetters.has('Q')).toBe(true);
+      expect(uniqueLetters.has('Z')).toBe(true);
+      expect(uniqueLetters.has('A')).toBe(true);
+      expect(uniqueLetters.has('X')).toBe(true);
     });
 
     it('should return copy of revealed letters set', () => {

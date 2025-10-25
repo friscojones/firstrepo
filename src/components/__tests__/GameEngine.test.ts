@@ -21,7 +21,7 @@ describe('GameEngine', () => {
     // Setup default mock response for sentence loading
     const mockResponse = {
       success: true,
-      sentence: 'Hello World!',
+      sentence: 'The quick brown fox jumps over the lazy dog.',
       date: '2024-01-01',
       difficulty: 'easy'
     };
@@ -380,7 +380,7 @@ describe('GameEngine', () => {
       await gameEngine.initializeGame('2024-01-01');
       
       const gameState = gameEngine.getGameState();
-      expect(gameState.currentSentence).toBe('Reading books helps students learn new words and ideas.');
+      expect(gameState.currentSentence).toBe('The quick brown fox jumps over the lazy dog.');
     });
 
     it('should maintain state consistency during gameplay', () => {

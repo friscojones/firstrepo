@@ -1,12 +1,28 @@
 /**
- * Type definitions for the Guess the Sentence Game API
+ * Type definitions for Cloudflare Workers environment
  */
 
-// Request/Response interfaces
+export interface Env {
+  SENTENCES_KV: KVNamespace;
+  GAME_DB: D1Database;
+  ALLOWED_ORIGINS: string;
+  MAX_LEADERBOARD_ENTRIES: string;
+  MAX_PLAYER_NAME_LENGTH: string;
+  RATE_LIMIT_REQUESTS: string;
+  RATE_LIMIT_WINDOW: string;
+  GAME_ANALYTICS?: AnalyticsEngineDataset;
+}
+
+export interface SentenceData {
+  sentence: string;
+  difficulty: 'easy' | 'medium' | 'hard';
+}
+
 export interface SentenceResponse {
   sentence: string;
   date: string;
   difficulty: string;
+  success?: boolean;
 }
 
 export interface ScoreSubmissionRequest {
@@ -17,14 +33,16 @@ export interface ScoreSubmissionRequest {
 
 export interface ScoreSubmissionResponse {
   success: boolean;
-  message: string;
-  playerName: string;
-  dailyScore: number;
-  gameDate: string;
+  message?: string;
+  playerName?: string;
+  dailyScore?: number;
+  gameDate?: string;
+  cumulativeScore?: number;
+  gamesPlayed?: number;
+  error?: string;
 }
 
 export interface LeaderboardEntry {
-  rank: number;
   playerName: string;
   cumulativeScore: number;
   gamesPlayed: number;
@@ -32,41 +50,12 @@ export interface LeaderboardEntry {
 }
 
 export interface LeaderboardResponse {
+  success: boolean;
   leaderboard: LeaderboardEntry[];
-  totalPlayers: number;
-  lastUpdated: string;
+  totalPlayers?: number;
+  lastUpdated?: string;
 }
 
-// Database models
-export interface PlayerRecord {
-  player_name: string;
-  cumulative_score: number;
-  games_played: number;
-  last_played: string;
-  created_at: string;
-}
-
-export interface DailyScoreRecord {
-  id: number;
-  player_name: string;
-  game_date: string;
-  daily_score: number;
-  created_at: string;
-}
-
-// KV Store models
-export interface SentenceData {
-  sentence: string;
-  difficulty: 'easy' | 'medium' | 'hard';
-  created_at?: string;
-  metadata?: {
-    wordCount: number;
-    letterCount: number;
-    gradeLevel: number;
-  };
-}
-
-// Error response interface
 export interface ErrorResponse {
   error: string;
   code?: string;

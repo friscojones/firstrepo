@@ -66,7 +66,7 @@ export class ApiClient {
    */
   private async makeRequest<T>(
     url: string,
-    options: RequestInit = {},
+    options: globalThis.RequestInit = {},
     retryCount = 0
   ): Promise<T> {
     const controller = new AbortController();
