@@ -137,7 +137,19 @@ setupNetworkEventHandlers();
 
 // Export game instances for debugging and testing
 if (typeof window !== 'undefined') {
-  (window as any).gameEngine = gameEngine;
-  (window as any).uiController = uiController;
-  (window as any).apiClient = apiClient;
+  (window as typeof window & { 
+    gameEngine: typeof gameEngine;
+    uiController: typeof uiController;
+    apiClient: typeof apiClient;
+  }).gameEngine = gameEngine;
+  (window as typeof window & { 
+    gameEngine: typeof gameEngine;
+    uiController: typeof uiController;
+    apiClient: typeof apiClient;
+  }).uiController = uiController;
+  (window as typeof window & { 
+    gameEngine: typeof gameEngine;
+    uiController: typeof uiController;
+    apiClient: typeof apiClient;
+  }).apiClient = apiClient;
 }

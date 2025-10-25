@@ -9,7 +9,7 @@ import type { GameState } from '../../types/game.js';
 
 // Mock fetch for testing API calls
 const mockFetch = vi.fn();
-(globalThis as any).fetch = mockFetch;
+(globalThis as typeof globalThis & { fetch: typeof mockFetch }).fetch = mockFetch;
 
 describe('GameEngine', () => {
   let gameEngine: GameEngine;

@@ -33,6 +33,7 @@ export class UIController {
   private completionModal: HTMLElement | null = null;
   private leaderboardModal: HTMLElement | null = null;
   private modalFocusHandlers = new WeakMap<HTMLElement, (e: KeyboardEvent) => void>();
+  private previouslyFocusedElements = new WeakMap<HTMLElement, Element>();
 
   constructor(gameEngine: GameEngine, config?: Partial<UIConfig>) {
     this.gameEngine = gameEngine;
@@ -618,7 +619,9 @@ export class UIController {
     this.completionModal.setAttribute('aria-hidden', 'false');
     
     // Store the previously focused element to restore later
-    (this.completionModal as any).previouslyFocusedElement = document.activeElement;
+    if (document.activeElement) {
+      this.previouslyFocusedElements.set(this.completionModal, document.activeElement);
+    }
     
     // Clear any previous form data and set focus
     const nameInput = document.getElementById('player-name') as HTMLInputElement;
@@ -676,8 +679,8 @@ export class UIController {
       this.completionModal.setAttribute('aria-hidden', 'true');
       
       // Restore focus to previously focused element
-      const previouslyFocused = (this.completionModal as any).previouslyFocusedElement;
-      if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+      const previouslyFocused = this.previouslyFocusedElements.get(this.completionModal);
+      if (previouslyFocused && 'focus' in previouslyFocused && typeof previouslyFocused.focus === 'function') {
         previouslyFocused.focus();
       } else {
         // Fallback to leaderboard button
@@ -821,7 +824,9 @@ export class UIController {
     this.leaderboardModal.setAttribute('aria-hidden', 'false');
     
     // Store the previously focused element
-    (this.leaderboardModal as any).previouslyFocusedElement = document.activeElement;
+    if (document.activeElement) {
+      this.previouslyFocusedElements.set(this.leaderboardModal, document.activeElement);
+    }
     
     this.setLeaderboardLoadingState(true);
 
@@ -1008,8 +1013,8 @@ export class UIController {
       this.leaderboardModal.setAttribute('aria-hidden', 'true');
       
       // Restore focus to previously focused element
-      const previouslyFocused = (this.leaderboardModal as any).previouslyFocusedElement;
-      if (previouslyFocused && typeof previouslyFocused.focus === 'function') {
+      const previouslyFocused = this.previouslyFocusedElements.get(this.leaderboardModal);
+      if (previouslyFocused && 'focus' in previouslyFocused && typeof previouslyFocused.focus === 'function') {
         previouslyFocused.focus();
       } else {
         // Fallback to leaderboard button
@@ -1143,12 +1148,12 @@ export class UIController {
   private trapFocusInModal(modal: HTMLElement): void {
     const focusableElements = modal.querySelectorAll(
       'button, input, select, textarea, [tabindex]:not([tabindex="-1"]), [href]'
-    ) as NodeListOf<HTMLElement>;
+    );
     
     if (focusableElements.length === 0) return;
     
-    const firstElement = focusableElements[0];
-    const lastElement = focusableElements[focusableElements.length - 1];
+    const firstElement = focusableElements[0] as HTMLElement;
+    const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
     
     const handleTabKey = (e: KeyboardEvent) => {
       if (e.key !== 'Tab') return;

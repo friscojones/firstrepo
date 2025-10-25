@@ -8,7 +8,7 @@ import { SentenceManager } from '../SentenceManager.js';
 
 // Mock fetch for testing API calls
 const mockFetch = vi.fn();
-(globalThis as any).fetch = mockFetch;
+(globalThis as typeof globalThis & { fetch: typeof mockFetch }).fetch = mockFetch;
 
 describe('SentenceManager', () => {
   let manager: SentenceManager;

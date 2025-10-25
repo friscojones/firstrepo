@@ -16,7 +16,7 @@
     "kv:list": "wrangler kv:key list --binding=SENTENCES_KV"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20241022.0",
+    "@cloudflare/workers-types": "^4.20251014.0",
     "typescript": "^5.2.2",
     "wrangler": "^3.78.12"
   },

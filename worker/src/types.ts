@@ -2,6 +2,8 @@
  * Type definitions for Cloudflare Workers environment
  */
 
+/// <reference types="@cloudflare/workers-types" />
+
 export interface Env {
   SENTENCES_KV: KVNamespace;
   GAME_DB: D1Database;

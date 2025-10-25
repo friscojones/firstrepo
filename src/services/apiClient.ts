@@ -54,7 +54,7 @@ export class ApiClientError extends Error {
  */
 export class ApiClient {
   private config: ApiClientConfig;
-  private cache: Map<string, { data: any; timestamp: number; ttl: number }> = new Map();
+  private cache: Map<string, { data: unknown; timestamp: number; ttl: number }> = new Map();
 
   constructor(config?: Partial<ApiClientConfig>) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -128,7 +128,7 @@ export class ApiClient {
    * Determine if an error should trigger a retry
    * Requirements: 7.3, 7.5
    */
-  private shouldRetry(error: any, retryCount: number): boolean {
+  private shouldRetry(error: unknown, retryCount: number): boolean {
     if (retryCount >= this.config.maxRetries) {
       return false;
     }

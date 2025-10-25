@@ -14,7 +14,7 @@ import type {
 
 // Mock fetch for testing
 const mockFetch = vi.fn();
-(globalThis as any).fetch = mockFetch;
+(globalThis as typeof globalThis & { fetch: typeof mockFetch }).fetch = mockFetch;
 
 // Mock localStorage
 const mockLocalStorage = {
@@ -23,7 +23,7 @@ const mockLocalStorage = {
   removeItem: vi.fn(),
   clear: vi.fn()
 };
-(globalThis as any).localStorage = mockLocalStorage;
+(globalThis as typeof globalThis & { localStorage: typeof mockLocalStorage }).localStorage = mockLocalStorage;
 
 describe('ApiClient Integration Tests', () => {
   let apiClient: ApiClient;
@@ -444,7 +444,7 @@ describe('ApiClient Integration Tests', () => {
       expect(savedData).toBeTruthy();
       
       const savedScores = JSON.parse(savedData[1]);
-      const updatedPlayer = savedScores.find((p: any) => p.playerName === 'ExistingPlayer');
+      const updatedPlayer = savedScores.find((p: { playerName: string }) => p.playerName === 'ExistingPlayer');
       expect(updatedPlayer.cumulativeScore).toBe(275);
       expect(updatedPlayer.gamesPlayed).toBe(3);
     });
