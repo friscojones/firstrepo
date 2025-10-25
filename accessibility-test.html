@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Accessibility Test - Guess the Sentence</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ccc; }
+        .keyboard-test { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; max-width: 400px; }
+        .key-test { 
+            background: #4f46e5; 
+            color: white; 
+            border: none; 
+            padding: 12px; 
+            border-radius: 8px;
+            min-height: 48px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .key-test:focus {
+            outline: 3px solid #2563eb;
+            outline-offset: 2px;
+        }
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        @media (max-width: 640px) {
+            .keyboard-test { grid-template-columns: repeat(4, 1fr); gap: 4px; }
+            .key-test { font-size: 14px; min-height: 44px; }
+        }
+    </style>
+</head>
+<body>
+    <h1>Accessibility and Responsive Design Test</h1>
+    
+    <div class="test-section">
+        <h2>Screen Reader Support</h2>
+        <p>This section tests screen reader compatibility:</p>
+        <div role="status" aria-live="polite" aria-label="Game status">
+            Score: <span aria-label="Current score">150</span> | 
+            Streak: <span aria-label="Current streak">3</span>
+        </div>
+        <div class="sr-only">This text is only visible to screen readers</div>
+    </div>
+
+    <div class="test-section">
+        <h2>Keyboard Navigation Test</h2>
+        <p>Use Tab to navigate, Arrow keys to move between letters, Enter/Space to select:</p>
+        <div class="keyboard-test" role="group" aria-label="Letter selection keyboard">
+            <button class="key-test" aria-label="Letter A - click to guess">A</button>
+            <button class="key-test" aria-label="Letter B - click to guess">B</button>
+            <button class="key-test" aria-label="Letter C - click to guess">C</button>
+            <button class="key-test" aria-label="Letter D - click to guess">D</button>
+            <button class="key-test" aria-label="Letter E - click to guess">E</button>
+            <button class="key-test" aria-label="Letter F - click to guess">F</button>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>Touch Target Size Test</h2>
+        <p>All interactive elements should be at least 44px for touch accessibility:</p>
+        <button style="min-height: 44px; min-width: 44px; padding: 12px; font-size: 16px;">
+            Touch Target Test
+        </button>
+    </div>
+
+    <div class="test-section">
+        <h2>Responsive Design Test</h2>
+        <p>Resize your browser window to test responsive behavior:</p>
+        <ul>
+            <li>Desktop: 6-column keyboard layout</li>
+            <li>Tablet (≤768px): 7-column layout with larger fonts</li>
+            <li>Mobile (≤640px): 6-column layout</li>
+            <li>Small mobile (≤480px): 4-column layout</li>
+        </ul>
+    </div>
+
+    <div class="test-section">
+        <h2>Color Contrast Test</h2>
+        <p>All text should meet WCAG AA standards:</p>
+        <div style="background: #4f46e5; color: white; padding: 10px;">
+            Primary color text (should have good contrast)
+        </div>
+        <div style="background: #10b981; color: white; padding: 10px;">
+            Success color text (should have good contrast)
+        </div>
+        <div style="background: #ef4444; color: white; padding: 10px;">
+            Error color text (should have good contrast)
+        </div>
+    </div>
+
+    <script>
+        // Test keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.target.classList.contains('key-test')) {
+                const keys = Array.from(document.querySelectorAll('.key-test'));
+                const currentIndex = keys.indexOf(e.target);
+                let targetIndex = currentIndex;
+                
+                switch (e.key) {
+                    case 'ArrowRight':
+                    case 'ArrowDown':
+                        e.preventDefault();
+                        targetIndex = (currentIndex + 1) % keys.length;
+                        break;
+                    case 'ArrowLeft':
+                    case 'ArrowUp':
+                        e.preventDefault();
+                        targetIndex = currentIndex === 0 ? keys.length - 1 : currentIndex - 1;
+                        break;
+                    case 'Enter':
+                    case ' ':
+                        e.preventDefault();
+                        alert(`Selected letter: ${e.target.textContent}`);
+                        return;
+                }
+                
+                if (targetIndex !== currentIndex) {
+                    keys[targetIndex].focus();
+                }
+            }
+        });
+
+        // Test touch feedback
+        document.querySelectorAll('.key-test').forEach(key => {
+            key.addEventListener('touchstart', () => {
+                key.style.transform = 'scale(0.95)';
+                key.style.backgroundColor = '#3730a3';
+            }, { passive: true });
+            
+            key.addEventListener('touchend', () => {
+                key.style.transform = '';
+                key.style.backgroundColor = '#4f46e5';
+            }, { passive: true });
+        });
+    </script>
+</body>
+</html>

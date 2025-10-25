@@ -1,0 +1,47 @@
+name = "guess-the-sentence-api"
+main = "src/index.ts"
+compatibility_date = "2024-10-25"
+compatibility_flags = ["nodejs_compat"]
+
+# KV namespace for storing daily sentences securely
+# Run: wrangler kv:namespace create "SENTENCES_KV" to get production ID
+# Run: wrangler kv:namespace create "SENTENCES_KV" --preview to get preview ID
+[[kv_namespaces]]
+binding = "SENTENCES_KV"
+id = "sentences_namespace_id"  # Replace with actual KV namespace ID
+preview_id = "sentences_preview_id"  # Replace with actual preview namespace ID
+
+# D1 database for leaderboard and player statistics
+# Run: wrangler d1 create guess-the-sentence-db to get database ID
+[[d1_databases]]
+binding = "GAME_DB"
+database_name = "guess-the-sentence-db"
+database_id = "database_id_placeholder"  # Replace with actual D1 database ID
+
+# Environment variables for CORS and configuration
+[vars]
+ALLOWED_ORIGINS = "https://yourusername.github.io"  # Replace with your GitHub Pages URL
+MAX_LEADERBOARD_ENTRIES = "50"
+MAX_PLAYER_NAME_LENGTH = "50"
+RATE_LIMIT_REQUESTS = "100"
+RATE_LIMIT_WINDOW = "60"
+
+# Production environment overrides
+[env.production]
+vars = { ALLOWED_ORIGINS = "https://yourusername.github.io", MAX_LEADERBOARD_ENTRIES = "100" }
+
+# Development environment
+[env.development]
+vars = { ALLOWED_ORIGINS = "http://localhost:3000,http://127.0.0.1:3000", MAX_LEADERBOARD_ENTRIES = "10" }
+
+# Optional: Custom domain routing
+# Uncomment and configure if you have a custom domain
+# routes = [
+#   { pattern = "api.yoursite.com/*", zone_name = "yoursite.com" }
+# ]
+
+# Analytics and monitoring
+[analytics_engine_datasets]
+[[analytics_engine_datasets.bindings]]
+name = "GAME_ANALYTICS"
+dataset = "game_usage_stats"

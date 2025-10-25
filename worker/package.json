@@ -1,0 +1,26 @@
+{
+  "name": "guess-the-sentence-worker",
+  "version": "1.0.0",
+  "description": "Cloudflare Worker API for Guess the Sentence Game",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "types": "wrangler types",
+    "setup": "node setup-cloudflare.js",
+    "validate": "node validate-config.js",
+    "populate": "node populate-sentences.js",
+    "db:schema": "wrangler d1 execute guess-the-sentence-db --file=./schema.sql",
+    "db:query": "wrangler d1 execute guess-the-sentence-db --command",
+    "kv:list": "wrangler kv:key list --binding=SENTENCES_KV"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20241022.0",
+    "typescript": "^5.2.2",
+    "wrangler": "^3.78.12"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
