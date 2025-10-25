@@ -17,13 +17,19 @@ const mockFetch = vi.fn();
 (globalThis as typeof globalThis & { fetch: typeof mockFetch }).fetch = mockFetch;
 
 // Mock localStorage
+const mockGetItem = vi.fn();
+const mockSetItem = vi.fn();
+const mockRemoveItem = vi.fn();
+const mockClear = vi.fn();
+const mockKey = vi.fn();
+
 const mockLocalStorage: Storage = {
-  getItem: vi.fn(),
-  setItem: vi.fn(),
-  removeItem: vi.fn(),
-  clear: vi.fn(),
+  getItem: mockGetItem,
+  setItem: mockSetItem,
+  removeItem: mockRemoveItem,
+  clear: mockClear,
   length: 0,
-  key: vi.fn(),
+  key: mockKey,
 };
 (globalThis as typeof globalThis & { localStorage: Storage }).localStorage = mockLocalStorage;
 
@@ -40,7 +46,7 @@ describe('ApiClient Integration Tests', () => {
     });
     
     vi.clearAllMocks();
-    mockLocalStorage.getItem.mockReturnValue(null);
+    mockGetItem.mockReturnValue(null);
   });
 
   afterEach(() => {
@@ -385,13 +391,13 @@ describe('ApiClient Integration Tests', () => {
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       // Mock localStorage for fallback
-      mockLocalStorage.getItem.mockReturnValue('[]');
+      mockGetItem.mockReturnValue('[]');
 
       const result = await apiClient.submitScore(submission);
 
       expect(result.success).toBe(true);
       expect(result.error).toContain('saved locally');
-      expect(mockLocalStorage.setItem).toHaveBeenCalled();
+      expect(mockSetItem).toHaveBeenCalled();
     });
 
     it('should store score locally when API fails', async () => {
@@ -405,18 +411,18 @@ describe('ApiClient Integration Tests', () => {
       const existingScores = [
         { playerName: 'OtherPlayer', cumulativeScore: 200, gamesPlayed: 2, lastPlayedDate: '2024-01-14' }
       ];
-      mockLocalStorage.getItem.mockReturnValue(JSON.stringify(existingScores));
+      mockGetItem.mockReturnValue(JSON.stringify(existingScores));
 
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       await apiClient.submitScore(submission);
 
       // Verify localStorage was updated
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      expect(mockSetItem).toHaveBeenCalledWith(
         'guessTheSentence_leaderboard',
         expect.stringContaining('TestPlayer')
       );
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      expect(mockSetItem).toHaveBeenCalledWith(
         'guessTheSentence_pendingSubmissions',
         expect.stringContaining('TestPlayer')
       );
@@ -433,14 +439,14 @@ describe('ApiClient Integration Tests', () => {
       const existingScores = [
         { playerName: 'ExistingPlayer', cumulativeScore: 200, gamesPlayed: 2, lastPlayedDate: '2024-01-14' }
       ];
-      mockLocalStorage.getItem.mockReturnValue(JSON.stringify(existingScores));
+      mockGetItem.mockReturnValue(JSON.stringify(existingScores));
 
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       await apiClient.submitScore(submission);
 
       // Verify the score was updated (200 + 75 = 275)
-      const savedData = mockLocalStorage.setItem.mock.calls.find(call => 
+      const savedData = mockSetItem.mock.calls.find((call: [string, string]) => 
         call[0] === 'guessTheSentence_leaderboard'
       );
       expect(savedData).toBeTruthy();
@@ -680,7 +686,7 @@ describe('ApiClient Integration Tests', () => {
         { playerName: 'LocalPlayer2', cumulativeScore: 250, gamesPlayed: 2, lastPlayedDate: '2024-01-13' }
       ];
 
-      mockLocalStorage.getItem.mockReturnValue(JSON.stringify(localScores));
+      mockGetItem.mockReturnValue(JSON.stringify(localScores));
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
 
       const result = await apiClient.getLeaderboard(10);
@@ -851,7 +857,7 @@ describe('ApiClient Integration Tests', () => {
         { playerName: 'Player2', dailyScore: 150, gameDate: '2024-01-15' }
       ];
 
-      mockLocalStorage.getItem.mockImplementation((key) => {
+      mockGetItem.mockImplementation((key: string) => {
         if (key === 'guessTheSentence_pendingSubmissions') {
           return JSON.stringify(pendingSubmissions);
         }
@@ -870,7 +876,7 @@ describe('ApiClient Integration Tests', () => {
       expect(mockFetch).toHaveBeenCalledTimes(2);
       
       // Should clear pending submissions after successful sync
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
+      expect(mockSetItem).toHaveBeenCalledWith(
         'guessTheSentence_pendingSubmissions',
         '[]'
       );
@@ -882,7 +888,7 @@ describe('ApiClient Integration Tests', () => {
         { playerName: 'Player2', dailyScore: 150, gameDate: '2024-01-15' }
       ];
 
-      mockLocalStorage.getItem.mockImplementation((key) => {
+      mockGetItem.mockImplementation((key: string) => {
         if (key === 'guessTheSentence_pendingSubmissions') {
           return JSON.stringify(pendingSubmissions);
         }
@@ -902,7 +908,7 @@ describe('ApiClient Integration Tests', () => {
       expect(mockFetch).toHaveBeenCalledTimes(2);
       
       // Should only remove successful submission from pending list
-      const savedPending = mockLocalStorage.setItem.mock.calls.find(call => 
+      const savedPending = mockSetItem.mock.calls.find((call: [string, string]) => 
         call[0] === 'guessTheSentence_pendingSubmissions'
       );
       expect(savedPending).toBeTruthy();
