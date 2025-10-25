@@ -3,7 +3,7 @@
  * Requirements: 1.1, 1.3, 2.2, 2.3, 2.5
  */
 
-import type { SentenceResponse } from '../types/api.js';
+
 import { isValidSentence, normalizeLetter, isValidLetter } from '../types/validation.js';
 import { apiClient } from '../services/apiClient.js';
 

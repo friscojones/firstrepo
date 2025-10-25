@@ -9,8 +9,8 @@ const https = require('https');
 const { URL } = require('url');
 
 // Configuration
-const GITHUB_PAGES_URL = process.env.GITHUB_PAGES_URL || 'https://yourusername.github.io/guess-the-sentence-game';
-const WORKER_URL = process.env.WORKER_URL || 'https://guess-the-sentence-api.yourusername.workers.dev';
+const GITHUB_PAGES_URL = process.env.GITHUB_PAGES_URL || 'https://friscojones.github.io/firstrepo';
+const WORKER_URL = process.env.WORKER_URL || 'https://guess-the-sentence-api.friscojones.workers.dev';
 
 console.log('🧪 Starting end-to-end production tests...');
 console.log(`📱 Frontend URL: ${GITHUB_PAGES_URL}`);

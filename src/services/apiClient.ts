@@ -8,8 +8,7 @@ import type {
   SentenceResponse, 
   ScoreSubmissionRequest, 
   ScoreSubmissionResponse, 
-  LeaderboardResponse,
-  ApiError 
+  LeaderboardResponse
 } from '../types/api.js';
 import type { LeaderboardEntry } from '../types/game.js';
 
@@ -138,8 +137,9 @@ export class ApiClient {
     if (error instanceof ApiClientError) {
       const retryableStatuses = [408, 429, 500, 502, 503, 504];
       return error.status === 0 || // Network error
+             error.status === undefined ||
              error.code === 'TIMEOUT' ||
-             (error.status && retryableStatuses.includes(error.status));
+             (error.status !== undefined && retryableStatuses.includes(error.status));
     }
 
     // Also retry on generic network errors
@@ -372,9 +372,7 @@ export class ApiClient {
     
     return {
       success: true,
-      leaderboard: localScores,
-      totalPlayers: localScores.length,
-      lastUpdated: new Date().toISOString()
+      leaderboard: localScores
     };
   }
 
@@ -491,4 +489,4 @@ export class ApiClient {
 export const apiClient = new ApiClient();
 
 // Export types for external use
-export type { ApiClientConfig, ApiClientError };
+export type { ApiClientConfig };

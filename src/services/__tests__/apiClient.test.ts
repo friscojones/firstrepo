@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { ApiClient, ApiClientError } from '../apiClient.js';
+import { ApiClient } from '../apiClient.js';
 import type { 
   SentenceResponse, 
   ScoreSubmissionRequest, 
