@@ -28,7 +28,20 @@ RATE_LIMIT_WINDOW = "60"
 
 # Production environment overrides
 [env.production]
-vars = { ALLOWED_ORIGINS = "https://friscojones.github.io", MAX_LEADERBOARD_ENTRIES = "100" }
+vars = { ALLOWED_ORIGINS = "https://friscojones.github.io", MAX_LEADERBOARD_ENTRIES = "100", MAX_PLAYER_NAME_LENGTH = "50", RATE_LIMIT_REQUESTS = "100", RATE_LIMIT_WINDOW = "60" }
+
+[[env.production.kv_namespaces]]
+binding = "SENTENCES_KV"
+id = "0fca65aae5074178bd61bc7b74dc6db4"
+
+[[env.production.d1_databases]]
+binding = "GAME_DB"
+database_name = "guess-the-sentence-db"
+database_id = "cad68a42-c324-4862-99a2-91400bc3772a"
+
+# [[env.production.analytics_engine_datasets]]
+# binding = "GAME_ANALYTICS"
+# dataset = "game_usage_stats"
 
 # Development environment
 [env.development]
@@ -40,7 +53,7 @@ vars = { ALLOWED_ORIGINS = "http://localhost:3000,http://127.0.0.1:3000", MAX_LE
 #   { pattern = "api.yoursite.com/*", zone_name = "yoursite.com" }
 # ]
 
-# Analytics and monitoring
-[[analytics_engine_datasets]]
-binding = "GAME_ANALYTICS"
-dataset = "game_usage_stats"
+# Analytics and monitoring (disabled - requires paid plan)
+# [[analytics_engine_datasets]]
+# binding = "GAME_ANALYTICS"
+# dataset = "game_usage_stats"

@@ -27,7 +27,7 @@ interface ApiClientConfig {
  * Default configuration for API client
  */
 const DEFAULT_CONFIG: ApiClientConfig = {
-  baseUrl: 'https://guess-sentence-api.your-worker-domain.workers.dev',
+  baseUrl: 'https://guess-the-sentence-api-production.therobinson.workers.dev',
   timeout: 10000, // 10 seconds
   maxRetries: 3,
   retryDelay: 1000, // 1 second

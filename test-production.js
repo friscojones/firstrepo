@@ -5,8 +5,8 @@
  * Tests the complete game flow in production environment
  */
 
-const https = require('https');
-const { URL } = require('url');
+import https from 'https';
+import { URL } from 'url';
 
 // Configuration
 const GITHUB_PAGES_URL = process.env.GITHUB_PAGES_URL || 'https://friscojones.github.io/firstrepo';
