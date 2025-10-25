@@ -17,13 +17,15 @@ const mockFetch = vi.fn();
 (globalThis as typeof globalThis & { fetch: typeof mockFetch }).fetch = mockFetch;
 
 // Mock localStorage
-const mockLocalStorage = {
+const mockLocalStorage: Storage = {
   getItem: vi.fn(),
   setItem: vi.fn(),
   removeItem: vi.fn(),
-  clear: vi.fn()
+  clear: vi.fn(),
+  length: 0,
+  key: vi.fn(),
 };
-(globalThis as typeof globalThis & { localStorage: typeof mockLocalStorage }).localStorage = mockLocalStorage;
+(globalThis as typeof globalThis & { localStorage: Storage }).localStorage = mockLocalStorage;
 
 describe('ApiClient Integration Tests', () => {
   let apiClient: ApiClient;

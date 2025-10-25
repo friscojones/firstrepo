@@ -21,7 +21,7 @@ describe('GameEngine', () => {
     // Setup default mock response for sentence loading
     const mockResponse = {
       success: true,
-      sentence: 'The quick brown fox jumps over the lazy dog.',
+      sentence: 'Hello World!',
       date: '2024-01-01',
       difficulty: 'easy'
     };
@@ -373,14 +373,22 @@ describe('GameEngine', () => {
     });
 
     it('should handle sentence loading failures gracefully', async () => {
-      // Mock fetch to fail
+      // Import the API client to clear its cache
+      const { apiClient } = await import('../../services/apiClient.js');
+      
+      // Create a fresh GameEngine instance to avoid cached state
+      const freshGameEngine = new GameEngine();
+      
+      // Clear existing mocks, API cache, and set up failure
+      vi.clearAllMocks();
+      apiClient.clearCache();
       mockFetch.mockRejectedValueOnce(new Error('Network error'));
       
       // Should still initialize with fallback sentence
-      await gameEngine.initializeGame('2024-01-01');
+      await freshGameEngine.initializeGame('2024-01-01');
       
-      const gameState = gameEngine.getGameState();
-      expect(gameState.currentSentence).toBe('The quick brown fox jumps over the lazy dog.');
+      const gameState = freshGameEngine.getGameState();
+      expect(gameState.currentSentence).toBe('Reading books helps students learn new words and ideas.');
     });
 
     it('should maintain state consistency during gameplay', () => {
