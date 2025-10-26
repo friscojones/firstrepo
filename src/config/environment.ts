@@ -41,7 +41,7 @@ const configs: Record<string, EnvironmentConfig> = {
     enableDebugLogging: true,
   },
   production: {
-    apiBaseUrl: 'https://guess-the-sentence-api-production.therobinson.workers.dev',
+    apiBaseUrl: 'https://guess-the-sentence-api.therobinson.workers.dev',
     githubPagesUrl: 'https://friscojones.github.io/firstrepo',
     environment: 'production',
     enableAnalytics: true,
