@@ -14,7 +14,7 @@ export interface SentenceResponse {
   sentence: string;
   date: string;
   difficulty: string;
-  success?: boolean;
+  success: boolean;
 }
 
 export interface ScoreSubmissionRequest {
@@ -42,9 +42,11 @@ export interface LeaderboardEntry {
 }
 
 export interface LeaderboardResponse {
-  leaderboard: LeaderboardEntry[];
+  success: boolean;
+  leaderboard?: LeaderboardEntry[];
   totalPlayers?: number;
   lastUpdated?: string;
+  error?: string;
 }
 
 export interface ErrorResponse {

@@ -178,7 +178,7 @@ export default {
 async function handleSentenceRequest(request: Request, env: Env, pathname: string, origin?: string | null): Promise<Response> {
   const dateMatch = pathname.match(/\/api\/sentence\/(.+)$/);
   if (!dateMatch) {
-    return jsonResponse({ error: 'Invalid date format' } as ErrorResponse, env, 400, {}, origin);
+    return jsonResponse({ success: false, error: 'Invalid date format', sentence: '', date: '', difficulty: '' } as SentenceResponse, env, 400, {}, origin);
   }
 
   const requestedDate = dateMatch[1];
@@ -186,26 +186,26 @@ async function handleSentenceRequest(request: Request, env: Env, pathname: strin
   // Enhanced date validation
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(requestedDate)) {
-    return jsonResponse({ error: 'Date must be in YYYY-MM-DD format' } as ErrorResponse, env, 400, {}, origin);
+    return jsonResponse({ success: false, error: 'Date must be in YYYY-MM-DD format', sentence: '', date: requestedDate, difficulty: '' } as SentenceResponse, env, 400, {}, origin);
   }
 
   // Validate date is actually valid (not 2024-13-45)
   const parsedDate = new Date(requestedDate + 'T00:00:00Z');
   if (isNaN(parsedDate.getTime()) || parsedDate.toISOString().split('T')[0] !== requestedDate) {
-    return jsonResponse({ error: 'Invalid date provided' } as ErrorResponse, env, 400, {}, origin);
+    return jsonResponse({ success: false, error: 'Invalid date provided', sentence: '', date: requestedDate, difficulty: '' } as SentenceResponse, env, 400, {}, origin);
   }
 
   // Only allow current date and prevent accessing future sentences
   const today = new Date().toISOString().split('T')[0];
   if (requestedDate > today) {
-    return jsonResponse({ error: 'Cannot access future sentences' } as ErrorResponse, env, 403, {}, origin);
+    return jsonResponse({ success: false, error: 'Cannot access future sentences', sentence: '', date: requestedDate, difficulty: '' } as SentenceResponse, env, 403, {}, origin);
   }
 
   // Prevent accessing dates too far in the past (optional security measure)
   const oneYearAgo = new Date();
   oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
   if (requestedDate < oneYearAgo.toISOString().split('T')[0]) {
-    return jsonResponse({ error: 'Date too far in the past' } as ErrorResponse, env, 400, {}, origin);
+    return jsonResponse({ success: false, error: 'Date too far in the past', sentence: '', date: requestedDate, difficulty: '' } as SentenceResponse, env, 400, {}, origin);
   }
 
   try {
@@ -214,13 +214,14 @@ async function handleSentenceRequest(request: Request, env: Env, pathname: strin
     const sentenceData = await env.SENTENCES_KV.get<SentenceData>(sentenceKey, 'json');
 
     if (!sentenceData) {
-      return jsonResponse({ error: 'No sentence available for this date' } as ErrorResponse, env, 404, {}, origin);
+      return jsonResponse({ success: false, error: 'No sentence available for this date', sentence: '', date: requestedDate, difficulty: '' } as SentenceResponse, env, 404, {}, origin);
     }
 
     const response: SentenceResponse = {
       sentence: sentenceData.sentence,
       date: requestedDate,
       difficulty: sentenceData.difficulty || 'medium',
+      success: true,
     };
 
     // Track sentence retrieval
@@ -232,7 +233,7 @@ async function handleSentenceRequest(request: Request, env: Env, pathname: strin
     return jsonResponse(response, env, 200, {}, origin);
   } catch (error) {
     console.error('Error retrieving sentence:', error);
-    return jsonResponse({ error: 'Failed to retrieve sentence' } as ErrorResponse, env, 500, {}, origin);
+    return jsonResponse({ success: false, error: 'Failed to retrieve sentence', sentence: '', date: requestedDate, difficulty: '' } as SentenceResponse, env, 500, {}, origin);
   }
 }
 
@@ -353,6 +354,7 @@ async function handleLeaderboardRequest(request: Request, env: Env, origin?: str
     }));
 
     const response: LeaderboardResponse = {
+      success: true,
       leaderboard,
       totalPlayers: results.results.length,
       lastUpdated: new Date().toISOString(),
@@ -367,6 +369,6 @@ async function handleLeaderboardRequest(request: Request, env: Env, origin?: str
     return jsonResponse(response, env, 200, {}, origin);
   } catch (error) {
     console.error('Error retrieving leaderboard:', error);
-    return jsonResponse({ error: 'Failed to retrieve leaderboard' } as ErrorResponse, env, 500, {}, origin);
+    return jsonResponse({ success: false, error: 'Failed to retrieve leaderboard' } as LeaderboardResponse, env, 500, {}, origin);
   }
 }
