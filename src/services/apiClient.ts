@@ -23,11 +23,13 @@ interface ApiClientConfig {
   retryMultiplier: number;
 }
 
+import { config } from '../config/environment.js';
+
 /**
  * Default configuration for API client
  */
 const DEFAULT_CONFIG: ApiClientConfig = {
-  baseUrl: 'https://guess-the-sentence-api.therobinson.workers.dev',
+  baseUrl: config.apiBaseUrl,
   timeout: 10000, // 10 seconds
   maxRetries: 3,
   retryDelay: 1000, // 1 second

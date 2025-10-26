@@ -40,6 +40,54 @@ function trackEvent(env: Env, eventType: string, data: Record<string, any> = {})
   }
 }
 
+// Rate limiting helper
+async function checkRateLimit(env: Env, clientIP: string, ctx: ExecutionContext): Promise<{ allowed: boolean; retryAfter?: number }> {
+  const rateLimitRequests = parseInt(env.RATE_LIMIT_REQUESTS || '100');
+  const rateLimitWindow = parseInt(env.RATE_LIMIT_WINDOW || '60');
+  
+  const key = `rate_limit:${clientIP}`;
+  const now = Math.floor(Date.now() / 1000);
+  const windowStart = now - rateLimitWindow;
+  
+  try {
+    // Get current request count for this IP
+    const currentCount = await env.SENTENCES_KV.get(key);
+    const requests = currentCount ? JSON.parse(currentCount) : [];
+    
+    // Filter out old requests outside the window
+    const recentRequests = requests.filter((timestamp: number) => timestamp > windowStart);
+    
+    if (recentRequests.length >= rateLimitRequests) {
+      const oldestRequest = Math.min(...recentRequests);
+      const retryAfter = oldestRequest + rateLimitWindow - now;
+      return { allowed: false, retryAfter: Math.max(retryAfter, 1) };
+    }
+    
+    // Add current request timestamp
+    recentRequests.push(now);
+    
+    // Store updated request list with TTL
+    ctx.waitUntil(env.SENTENCES_KV.put(key, JSON.stringify(recentRequests), { expirationTtl: rateLimitWindow + 60 }));
+    
+    return { allowed: true };
+  } catch (error) {
+    console.error('Rate limiting error:', error);
+    // Allow request if rate limiting fails to avoid blocking legitimate users
+    return { allowed: true };
+  }
+}
+
+// Security headers helper
+function getSecurityHeaders(): Record<string, string> {
+  return {
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'X-XSS-Protection': '1; mode=block',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
+  };
+}
+
 // Response helper function
 function jsonResponse(data: any, env: Env, status = 200, headers = {}, origin?: string) {
   return new Response(JSON.stringify(data), {
@@ -47,6 +95,7 @@ function jsonResponse(data: any, env: Env, status = 200, headers = {}, origin?: 
     headers: {
       'Content-Type': 'application/json',
       ...getCorsHeaders(env, origin),
+      ...getSecurityHeaders(),
       ...headers,
     },
   });
@@ -61,10 +110,23 @@ function handleOptions(env: Env, origin?: string) {
 }
 
 export default {
-  async fetch(request: Request, env: Env, _ctx: ExecutionContext): Promise<Response> {
+  async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
     const { pathname } = url;
     const origin = request.headers.get('Origin');
+    const clientIP = request.headers.get('CF-Connecting-IP') || 'unknown';
+
+    // Rate limiting check
+    const rateLimitResult = await checkRateLimit(env, clientIP, ctx);
+    if (!rateLimitResult.allowed) {
+      return jsonResponse(
+        { error: 'Rate limit exceeded. Please try again later.' } as ErrorResponse,
+        env,
+        429,
+        { 'Retry-After': rateLimitResult.retryAfter?.toString() || '60' },
+        origin
+      );
+    }
 
     // Track request analytics
     trackEvent(env, 'api_request', {
@@ -120,16 +182,29 @@ async function handleSentenceRequest(request: Request, env: Env, pathname: strin
 
   const requestedDate = dateMatch[1];
   
-  // Validate date format (YYYY-MM-DD)
+  // Enhanced date validation
   const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
   if (!dateRegex.test(requestedDate)) {
     return jsonResponse({ error: 'Date must be in YYYY-MM-DD format' } as ErrorResponse, env, 400, {}, origin);
   }
 
-  // Only allow current date to prevent accessing future sentences
+  // Validate date is actually valid (not 2024-13-45)
+  const parsedDate = new Date(requestedDate + 'T00:00:00Z');
+  if (isNaN(parsedDate.getTime()) || parsedDate.toISOString().split('T')[0] !== requestedDate) {
+    return jsonResponse({ error: 'Invalid date provided' } as ErrorResponse, env, 400, {}, origin);
+  }
+
+  // Only allow current date and prevent accessing future sentences
   const today = new Date().toISOString().split('T')[0];
   if (requestedDate > today) {
     return jsonResponse({ error: 'Cannot access future sentences' } as ErrorResponse, env, 403, {}, origin);
+  }
+
+  // Prevent accessing dates too far in the past (optional security measure)
+  const oneYearAgo = new Date();
+  oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+  if (requestedDate < oneYearAgo.toISOString().split('T')[0]) {
+    return jsonResponse({ error: 'Date too far in the past' } as ErrorResponse, env, 400, {}, origin);
   }
 
   try {
@@ -169,21 +244,35 @@ async function handleScoreSubmission(request: Request, env: Env, origin?: string
     const body: ScoreSubmissionRequest = await request.json();
     const { playerName, dailyScore, gameDate } = body;
 
-    // Validate input
+    // Enhanced input validation
     if (!playerName || typeof playerName !== 'string' || playerName.trim().length === 0) {
       return jsonResponse({ error: 'Player name is required' } as ErrorResponse, env, 400, {}, origin);
     }
 
-    if (typeof dailyScore !== 'number' || dailyScore < 0) {
-      return jsonResponse({ error: 'Valid daily score is required' } as ErrorResponse, env, 400, {}, origin);
+    if (typeof dailyScore !== 'number' || dailyScore < 0 || dailyScore > 1000 || !Number.isInteger(dailyScore)) {
+      return jsonResponse({ error: 'Daily score must be a valid integer between 0 and 1000' } as ErrorResponse, env, 400, {}, origin);
     }
 
     if (!gameDate || !gameDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
       return jsonResponse({ error: 'Valid game date is required (YYYY-MM-DD)' } as ErrorResponse, env, 400, {}, origin);
     }
 
-    // Sanitize player name
-    const sanitizedName = playerName.trim().substring(0, 50);
+    // Validate game date is not in the future
+    const today = new Date().toISOString().split('T')[0];
+    if (gameDate > today) {
+      return jsonResponse({ error: 'Cannot submit scores for future dates' } as ErrorResponse, env, 403, {}, origin);
+    }
+
+    // Enhanced player name sanitization
+    const maxNameLength = parseInt(env.MAX_PLAYER_NAME_LENGTH || '50');
+    let sanitizedName = playerName.trim()
+      .replace(/[<>\"'&]/g, '') // Remove potentially dangerous characters
+      .substring(0, maxNameLength);
+    
+    // Ensure name isn't empty after sanitization
+    if (sanitizedName.length === 0) {
+      return jsonResponse({ error: 'Player name contains invalid characters' } as ErrorResponse, env, 400, {}, origin);
+    }
 
     // Check if player already submitted for this date
     const existingScore = await env.GAME_DB.prepare(

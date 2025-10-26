@@ -13,7 +13,10 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "lint:fix": "eslint . --ext ts,tsx --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,css,html}\"",
-    "deploy": "./deploy-production.sh",
+    "security:audit": "./security-audit.sh",
+    "security:deps": "npm audit && cd worker && npm audit",
+    "security:fix": "npm audit fix && cd worker && npm audit fix",
+    "deploy": "./security-audit.sh && ./deploy-production.sh",
     "deploy:worker": "cd worker && node deploy-production.js",
     "setup:monitoring": "echo 'See monitoring-setup.md for configuration instructions'"
   },
