@@ -20,7 +20,7 @@ database_id = "cad68a42-c324-4862-99a2-91400bc3772a"
 
 # Environment variables for CORS and configuration
 [vars]
-ALLOWED_ORIGINS = "https://friscojones.github.io"  # Replace with your GitHub Pages URL
+ALLOWED_ORIGINS = "https://friscojones.github.io/firstrepo"  # Replace with your GitHub Pages URL
 MAX_LEADERBOARD_ENTRIES = "50"
 MAX_PLAYER_NAME_LENGTH = "50"
 RATE_LIMIT_REQUESTS = "100"
@@ -29,7 +29,7 @@ RATE_LIMIT_WINDOW = "60"
 # Production environment overrides
 [env.production]
 [env.production.vars]
-ALLOWED_ORIGINS = "https://friscojones.github.io"
+ALLOWED_ORIGINS = "https://friscojones.github.io/firstrepo"
 MAX_LEADERBOARD_ENTRIES = "100"
 MAX_PLAYER_NAME_LENGTH = "50"
 RATE_LIMIT_REQUESTS = "100"

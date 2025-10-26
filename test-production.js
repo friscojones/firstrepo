@@ -10,7 +10,8 @@ import { URL } from 'url';
 
 // Configuration
 const GITHUB_PAGES_URL = process.env.GITHUB_PAGES_URL || 'https://friscojones.github.io/firstrepo';
-const WORKER_URL = process.env.WORKER_URL || 'https://guess-the-sentence-api.friscojones.workers.dev';
+const GITHUB_PAGES_ORIGIN = 'https://friscojones.github.io'; // Origin header doesn't include path
+const WORKER_URL = process.env.WORKER_URL || 'https://guess-the-sentence-api-production.therobinson.workers.dev';
 
 console.log('🧪 Starting end-to-end production tests...');
 console.log(`📱 Frontend URL: ${GITHUB_PAGES_URL}`);
@@ -37,8 +38,8 @@ function makeRequest(url, options = {}) {
       res.on('data', chunk => data += chunk);
       res.on('end', () => {
         try {
-          const jsonData = res.headers['content-type']?.includes('application/json') 
-            ? JSON.parse(data) 
+          const jsonData = res.headers['content-type']?.includes('application/json')
+            ? JSON.parse(data)
             : data;
           resolve({ status: res.statusCode, headers: res.headers, data: jsonData });
         } catch (error) {
@@ -48,11 +49,11 @@ function makeRequest(url, options = {}) {
     });
 
     req.on('error', reject);
-    
+
     if (options.body) {
       req.write(typeof options.body === 'string' ? options.body : JSON.stringify(options.body));
     }
-    
+
     req.end();
   });
 }
@@ -62,8 +63,11 @@ async function testFrontendAvailability() {
   console.log('\n📋 Testing frontend availability...');
   try {
     const response = await makeRequest(GITHUB_PAGES_URL);
-    if (response.status === 200) {
+    if (response.status === 200 || response.status === 301) {
       console.log('✅ Frontend is accessible');
+      if (response.status === 301) {
+        console.log('   (301 redirect is normal for GitHub Pages)');
+      }
       return true;
     } else {
       console.log(`❌ Frontend returned status ${response.status}`);
@@ -97,7 +101,7 @@ async function testSentenceAPI() {
   try {
     const today = new Date().toISOString().split('T')[0];
     const response = await makeRequest(`${WORKER_URL}/api/sentence/${today}`);
-    
+
     if (response.status === 200 && response.data.sentence) {
       console.log('✅ Sentence API working');
       console.log(`📄 Today's sentence: "${response.data.sentence}"`);
@@ -116,13 +120,14 @@ async function testLeaderboardAPI() {
   console.log('\n🏆 Testing leaderboard API...');
   try {
     const response = await makeRequest(`${WORKER_URL}/api/leaderboard`);
-    
-    if (response.status === 200 && Array.isArray(response.data)) {
+
+    if (response.status === 200 && response.data.success && Array.isArray(response.data.leaderboard)) {
       console.log('✅ Leaderboard API working');
-      console.log(`📊 Found ${response.data.length} leaderboard entries`);
+      console.log(`📊 Found ${response.data.leaderboard.length} leaderboard entries`);
       return true;
     } else {
       console.log(`❌ Leaderboard API failed: ${response.status}`);
+      console.log(`   Response structure: ${JSON.stringify(response.data).substring(0, 200)}...`);
       return false;
     }
   } catch (error) {
@@ -150,10 +155,11 @@ async function testScoreSubmission() {
 
     if (response.status === 200 && response.data.success) {
       console.log('✅ Score submission working');
-      console.log(`📈 Cumulative score: ${response.data.cumulativeScore}`);
+      console.log(`📈 Daily score: ${response.data.dailyScore}`);
       return true;
     } else {
       console.log(`❌ Score submission failed: ${response.status}`);
+      console.log(`   Response: ${JSON.stringify(response.data)}`);
       return false;
     }
   } catch (error) {
@@ -167,16 +173,17 @@ async function testCORSHeaders() {
   try {
     const response = await makeRequest(`${WORKER_URL}/api/leaderboard`, {
       headers: {
-        'Origin': GITHUB_PAGES_URL
+        'Origin': GITHUB_PAGES_ORIGIN
       }
     });
 
     const corsHeader = response.headers['access-control-allow-origin'];
-    if (corsHeader && (corsHeader === '*' || corsHeader === GITHUB_PAGES_URL)) {
+    if (corsHeader && (corsHeader === '*' || corsHeader === GITHUB_PAGES_ORIGIN)) {
       console.log('✅ CORS headers configured correctly');
       return true;
     } else {
       console.log(`❌ CORS headers missing or incorrect: ${corsHeader}`);
+      console.log(`   Expected: ${GITHUB_PAGES_ORIGIN}, Got: ${corsHeader}`);
       return false;
     }
   } catch (error) {

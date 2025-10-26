@@ -285,12 +285,7 @@ async function handleScoreSubmission(request: Request, env: Env, origin?: string
       return jsonResponse({ error: 'Score already submitted for this date' } as ErrorResponse, env, 409, {}, origin);
     }
 
-    // Insert daily score
-    await env.GAME_DB.prepare(
-      'INSERT INTO daily_scores (player_name, game_date, daily_score, created_at) VALUES (?, ?, ?, ?)'
-    ).bind(sanitizedName, gameDate, dailyScore, new Date().toISOString()).run();
-
-    // Update or insert player cumulative score
+    // First, ensure player exists in players table (required for foreign key constraint)
     const existingPlayer = await env.GAME_DB.prepare(
       'SELECT cumulative_score, games_played FROM players WHERE player_name = ?'
     ).bind(sanitizedName).first();
@@ -304,11 +299,16 @@ async function handleScoreSubmission(request: Request, env: Env, origin?: string
         'UPDATE players SET cumulative_score = ?, games_played = ?, last_played = ? WHERE player_name = ?'
       ).bind(newCumulativeScore, newGamesPlayed, gameDate, sanitizedName).run();
     } else {
-      // Insert new player
+      // Insert new player first (required for foreign key constraint)
       await env.GAME_DB.prepare(
         'INSERT INTO players (player_name, cumulative_score, games_played, last_played) VALUES (?, ?, ?, ?)'
       ).bind(sanitizedName, dailyScore, 1, gameDate).run();
     }
+
+    // Now insert daily score (after player exists in players table)
+    await env.GAME_DB.prepare(
+      'INSERT INTO daily_scores (player_name, game_date, daily_score, created_at) VALUES (?, ?, ?, ?)'
+    ).bind(sanitizedName, gameDate, dailyScore, new Date().toISOString()).run();
 
     const response: ScoreSubmissionResponse = {
       success: true,
