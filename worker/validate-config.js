@@ -74,7 +74,7 @@ function validateWranglerConfig() {
 function validateKV() {
   console.log('\n📦 Checking KV namespace...');
   return runCommand(
-    'wrangler kv:namespace list',
+    'wrangler kv namespace list',
     'KV namespace accessibility'
   );
 }
@@ -102,7 +102,7 @@ function validateD1() {
 function validateSentences() {
   console.log('\n📝 Checking sentence population...');
   return runCommand(
-    'wrangler kv:key list --binding=SENTENCES_KV',
+    'wrangler kv key list --binding=SENTENCES_KV',
     'Sentence data in KV store'
   );
 }

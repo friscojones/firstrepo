@@ -1,6 +1,6 @@
 name = "guess-the-sentence-api"
 main = "src/index.ts"
-compatibility_date = "2024-10-25"
+compatibility_date = "2024-10-26"
 compatibility_flags = ["nodejs_compat"]
 
 # KV namespace for storing daily sentences securely

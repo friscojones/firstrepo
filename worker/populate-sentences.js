@@ -220,7 +220,7 @@ sentences.forEach(({ date, sentence, difficulty }) => {
   const value = JSON.stringify({ sentence, difficulty });
   
   try {
-    const command = `wrangler kv:key put --binding=SENTENCES_KV "${key}" '${value}'`;
+    const command = `wrangler kv key put --binding=SENTENCES_KV "${key}" '${value}'`;
     console.log(`Adding sentence for ${date}...`);
     execSync(command, { stdio: 'inherit' });
   } catch (error) {
@@ -230,4 +230,4 @@ sentences.forEach(({ date, sentence, difficulty }) => {
 
 console.log('Finished populating sentences!');
 console.log('\nTo verify, you can list all keys with:');
-console.log('wrangler kv:key list --binding=SENTENCES_KV');
+console.log('wrangler kv key list --binding=SENTENCES_KV');

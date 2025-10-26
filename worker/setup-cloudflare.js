@@ -55,12 +55,12 @@ try {
 console.log('2️⃣ Creating KV Namespaces');
 try {
   const kvOutput = runCommand(
-    'wrangler kv:namespace create "SENTENCES_KV"',
+    'wrangler kv namespace create "SENTENCES_KV"',
     'Creating production KV namespace'
   );
   
   const kvPreviewOutput = runCommand(
-    'wrangler kv:namespace create "SENTENCES_KV" --preview',
+    'wrangler kv namespace create "SENTENCES_KV" --preview',
     'Creating preview KV namespace'
   );
   
@@ -105,7 +105,7 @@ try {
 console.log('5️⃣ Verifying Setup');
 try {
   runCommand(
-    'wrangler kv:key list --binding=SENTENCES_KV',
+    'wrangler kv key list --binding=SENTENCES_KV',
     'Listing KV keys to verify setup'
   );
 } catch (error) {

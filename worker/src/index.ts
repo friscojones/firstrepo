@@ -4,7 +4,6 @@
  */
 
 import {
-  Env,
   SentenceResponse,
   ScoreSubmissionRequest,
   ScoreSubmissionResponse,
@@ -16,7 +15,7 @@ import {
 
 
 // CORS headers for GitHub Pages domain access
-function getCorsHeaders(env: Env, origin?: string): Record<string, string> {
+function getCorsHeaders(env: Env, origin?: string | null): Record<string, string> {
   const allowedOrigins = env.ALLOWED_ORIGINS?.split(',') || ['*'];
   const isAllowed = origin && allowedOrigins.includes(origin);
   
@@ -30,14 +29,16 @@ function getCorsHeaders(env: Env, origin?: string): Record<string, string> {
 
 // Analytics helper function
 function trackEvent(env: Env, eventType: string, data: Record<string, any> = {}) {
-  if (env.GAME_ANALYTICS) {
-    env.GAME_ANALYTICS.writeDataPoint({
-      blobs: [eventType],
-      doubles: [Date.now()],
-      indexes: [eventType],
-      ...data
-    });
-  }
+  // Analytics is disabled in current configuration
+  // Uncomment the analytics_engine_datasets section in wrangler.toml to enable
+  // if (env.GAME_ANALYTICS) {
+  //   env.GAME_ANALYTICS.writeDataPoint({
+  //     blobs: [eventType],
+  //     doubles: [Date.now()],
+  //     indexes: [eventType],
+  //     ...data
+  //   });
+  // }
 }
 
 // Rate limiting helper
@@ -89,7 +90,7 @@ function getSecurityHeaders(): Record<string, string> {
 }
 
 // Response helper function
-function jsonResponse(data: any, env: Env, status = 200, headers = {}, origin?: string) {
+function jsonResponse(data: any, env: Env, status = 200, headers = {}, origin?: string | null) {
   return new Response(JSON.stringify(data), {
     status,
     headers: {
@@ -102,7 +103,7 @@ function jsonResponse(data: any, env: Env, status = 200, headers = {}, origin?: 
 }
 
 // Handle CORS preflight requests
-function handleOptions(env: Env, origin?: string) {
+function handleOptions(env: Env, origin?: string | null) {
   return new Response(null, {
     status: 204,
     headers: getCorsHeaders(env, origin),
@@ -162,7 +163,7 @@ export default {
     } catch (error) {
       console.error('Worker error:', error);
       trackEvent(env, 'api_error', {
-        blobs: [pathname, error.message || 'unknown_error'],
+        blobs: [pathname, (error as Error).message || 'unknown_error'],
         doubles: [Date.now()]
       });
       return jsonResponse({ error: 'Internal server error' } as ErrorResponse, env, 500, {}, origin);
@@ -174,7 +175,7 @@ export default {
  * Handle sentence retrieval endpoint
  * GET /api/sentence/{date}
  */
-async function handleSentenceRequest(request: Request, env: Env, pathname: string, origin?: string): Promise<Response> {
+async function handleSentenceRequest(request: Request, env: Env, pathname: string, origin?: string | null): Promise<Response> {
   const dateMatch = pathname.match(/\/api\/sentence\/(.+)$/);
   if (!dateMatch) {
     return jsonResponse({ error: 'Invalid date format' } as ErrorResponse, env, 400, {}, origin);
@@ -239,9 +240,9 @@ async function handleSentenceRequest(request: Request, env: Env, pathname: strin
  * Handle score submission endpoint
  * POST /api/scores
  */
-async function handleScoreSubmission(request: Request, env: Env, origin?: string): Promise<Response> {
+async function handleScoreSubmission(request: Request, env: Env, origin?: string | null): Promise<Response> {
   try {
-    const body: ScoreSubmissionRequest = await request.json();
+    const body = await request.json() as ScoreSubmissionRequest;
     const { playerName, dailyScore, gameDate } = body;
 
     // Enhanced input validation
@@ -333,7 +334,7 @@ async function handleScoreSubmission(request: Request, env: Env, origin?: string
  * Handle leaderboard request endpoint
  * GET /api/leaderboard
  */
-async function handleLeaderboardRequest(request: Request, env: Env, origin?: string): Promise<Response> {
+async function handleLeaderboardRequest(request: Request, env: Env, origin?: string | null): Promise<Response> {
   const url = new URL(request.url);
   const limit = Math.min(parseInt(url.searchParams.get('limit') || '10'), 100);
 
